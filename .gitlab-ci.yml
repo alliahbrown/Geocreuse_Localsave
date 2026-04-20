@@ -11,3 +11,4 @@ create-env:
     expire_in: 1 hour
   only:
     - main
+    - staging
