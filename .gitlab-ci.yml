@@ -2,14 +2,13 @@ stages:
   - build
   - release
 
-# ── Build Linux ──────────────────────────────────────────
 build-linux:
   stage: build
   image: node:20
   only:
     - tags
   before_script:
-    - apt-get update && apt-get install -y libarchive-tools fakeroot rpm
+    - apt-get update && apt-get install -y libarchive-tools fakeroot rpm zip
   script:
     - npm ci
     - npm run dist -- --linux
@@ -20,12 +19,13 @@ build-linux:
       - dist/GeoCreuse_LocalSave_Linux.zip
     expire_in: 1 hour
 
-# ── Build Windows (cross-compile via Wine) ────────────────
 build-windows:
   stage: build
   image: electronuserland/builder:wine
   only:
     - tags
+  before_script:
+    - apt-get update && apt-get install -y zip
   script:
     - npm ci
     - npm run dist -- --win
