@@ -1,0 +1,13 @@
+stages:
+  - setup
+
+create-env:
+  stage: setup
+  script:
+    - echo "API_SECRET_KEY=$API_SECRET_KEY" > .env
+  artifacts:
+    paths:
+      - .env
+    expire_in: 1 hour
+  only:
+    - main

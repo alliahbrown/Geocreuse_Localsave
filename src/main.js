@@ -2,7 +2,7 @@ require('dotenv').config();
 
 console.log('API_SECRET_KEY chargée :', process.env.API_SECRET_KEY ? 'OUI' : 'NON/undefined');
 const { app, BrowserWindow, ipcMain } = require('electron');
-// const path = require('path');
+
 const db = require('./db');
 const sync = require('./sync');
 const { dialog } = require('electron');
