@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Géocreuse — Résultats</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, sans-serif;
+            background: #f4f6f9;
+            color: #333;
+        }
+
+        header {
+            background: #1a73e8;
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        header h1 {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        #status {
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #status.online {
+            background: #34a853;
+        }
+
+        #status.offline {
+            background: #ea4335;
+        }
+
+        .toolbar {
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border-bottom: 1px solid #ddd;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-divider {
+            width: 1px;
+            height: 24px;
+            background: #ddd;
+            margin: 0 4px;
+        }
+
+        button {
+            padding: 7px 14px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            background: white;
+            color: #333;
+        }
+
+        button:hover {
+            background: #f0f0f0;
+        }
+
+        button.primary {
+            background: #1a73e8;
+            color: white;
+            border-color: #1a73e8;
+        }
+
+        button.primary:hover {
+            background: #1557b0;
+        }
+
+        button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        select {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            background: white;
+            color: #333;
+            cursor: pointer;
+        }
+
+        #autosave-status {
+            font-size: 0.8rem;
+            color: #555;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: #f0f0f0;
+            white-space: nowrap;
+        }
+
+        #message {
+            padding: 6px 24px;
+            font-size: 0.82rem;
+            color: #555;
+            min-height: 26px;
+        }
+
+        .container {
+            padding: 0 24px 24px;
+        }
+
+        #count {
+            font-size: 0.78rem;
+            color: #888;
+            margin: 10px 0 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        th {
+            background: #e8f0fe;
+            padding: 9px 14px;
+            text-align: left;
+            font-size: 0.82rem;
+            color: #1a73e8;
+            font-weight: 500;
+        }
+
+        td {
+            padding: 9px 14px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.85rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #f8f9ff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Géocreuse — Résultats</h1>
+        <span id="status">...</span>
+    </header>
+
+    <div class="toolbar">
+        <button class="primary" id="btn-sync">Synchroniser</button>
+        <button id="btn-export-csv">Export CSV</button>
+        <button id="btn-export-json">Export JSON</button>
+
+        <div class="toolbar-divider"></div>
+
+        <select id="autosave-format" title="Format">
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+        </select>
+
+        <select id="autosave-frequency" title="Fréquence">
+            <option value="5">5 s</option>
+            <option value="30">30 s</option>
+            <option value="60">1 min</option>
+            <option value="300">5 min</option>
+            <option value="600">10 min</option>
+        </select>
+
+        <button id="btn-start-autosave">Auto-sauvegarde</button>
+        <button id="btn-stop-autosave" disabled>Arrêter</button>
+
+        <span id="autosave-status"></span>
+    </div>
+
+    <div id="message"></div>
+
+    <div class="container">
+        <div id="count"></div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Sexe</th>
+                    <th>Âge</th>
+                    <th>Équipe</th>
+                    <th>Peloton</th>
+                    <th>Temps total</th>
+                    <th>Distance (km)</th>
+                </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+        </table>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+
+</html>
