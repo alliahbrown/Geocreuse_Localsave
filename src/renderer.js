@@ -84,6 +84,7 @@ function renderResults(rows) {
 
 // ── Chargement initial depuis SQLite local ──────────────────────
 async function loadLocal() {
+    console.log("LOAD");
     const rows = await window.api.getResults();
     console.log("rows :", rows);
     renderResults(rows);
@@ -94,10 +95,12 @@ btnSync.addEventListener('click', async () => {
     btnSync.disabled = true;
     message.textContent = 'Synchronisation en cours...';
     const result = await window.api.sync();
-
     if (result.success) {
-        message.textContent = `${result.count} résultat(s) synchronisé(s) !`;
-        await loadLocal();
+        const c = result.counts;
+        message.textContent = `Sync : ${c.athletes} athlètes, ${c.segments} segments, ${c.results} résultats`;
+        message.className = 'success';
+        await loadAll();
+
     } else {
         message.textContent = ` Erreur : ${result.error}`;
     }

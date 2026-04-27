@@ -1,20 +1,18 @@
 require('dotenv').config();
-
 console.log('API_SECRET_KEY chargée :', process.env.API_SECRET_KEY ? 'OUI' : 'NON/undefined');
-const { app, BrowserWindow, ipcMain } = require('electron');
 
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const fs = require('fs');
+const path = require('path');
 const db = require('./db');
 const sync = require('./sync');
-const { dialog } = require('electron');
-const fs = require('fs');
-
-const path = require('path');
 
 if (app.isPackaged) {
     require('dotenv').config({ path: path.join(process.resourcesPath, '.env') });
 } else {
     require('dotenv').config({ path: path.join(__dirname, '../.env') });
 }
+
 let mainWindow;
 
 function createWindow() {
@@ -33,8 +31,20 @@ function createWindow() {
 app.whenReady().then(async () => {
     await db.init();
     createWindow();
-    sync.pull().catch((e) => console.log('Sync échouée :', e.message, e));
+
+    mainWindow.webContents.once('did-finish-load', async () => {
+        try {
+            const counts = await sync.pull();
+            console.log('counts retourné :', JSON.stringify(counts));
+            mainWindow.webContents.send('auto-sync-done', { success: true, counts });
+        } catch (e) {
+            console.log('Sync échouée :', e.message);
+            mainWindow.webContents.send('auto-sync-done', { success: false, error: e.message });
+        }
+    });
 });
+
+// ── Handlers IPC ─────────────────────────────────────────────────
 
 ipcMain.handle('get-athletes', () => db.getAthletes());
 ipcMain.handle('get-segments-stages', () => db.getSegmentsStages());
@@ -59,15 +69,12 @@ ipcMain.handle('export-csv', async () => {
         defaultPath: 'geocreuse-resultats.csv',
         filters: [{ name: 'CSV', extensions: ['csv'] }],
     });
-
     if (!filePath) return { success: false, error: 'Annulé' };
 
-    const header = 'athlete_id,nom,prenom,sexe,age,equipe,peloton,distance_totale';
-    const lines = rows.map(r =>
-        [r.athlete_id, r.nom, r.prenom, r.sexe, r.age,
-        r.equipe, r.peloton, r.distance_totale].join(',')
-    );
-
+    const allRows = db.getResults();
+    const cols = allRows.length ? Object.keys(allRows[0]) : [];
+    const header = cols.join(',');
+    const lines = allRows.map(r => cols.map(c => r[c] ?? '').join(','));
     fs.writeFileSync(filePath, [header, ...lines].join('\n'), 'utf-8');
     return { success: true, filePath };
 });
@@ -82,23 +89,20 @@ ipcMain.handle('export-json', async () => {
         defaultPath: 'geocreuse-resultats.json',
         filters: [{ name: 'JSON', extensions: ['json'] }],
     });
-
     if (!filePath) return { success: false, error: 'Annulé' };
 
     fs.writeFileSync(filePath, JSON.stringify(rows, null, 2), 'utf-8');
     return { success: true, filePath };
 });
 
-
-// Auto-save handler
-ipcMain.handle('autosave-pick-and-start', async (_, { format, intervalMs }) => {
+// Auto-save
+ipcMain.handle('autosave-pick-and-start', async (_, { format }) => {
     const ext = format === 'csv' ? 'csv' : 'json';
     const { filePath } = await dialog.showSaveDialog({
         title: 'Choisir le fichier de sauvegarde automatique',
         defaultPath: `geocreuse-autosave.${ext}`,
         filters: [{ name: ext.toUpperCase(), extensions: [ext] }],
     });
-
     if (!filePath) return { success: false, error: 'Annulé' };
     return { success: true, filePath };
 });
@@ -108,15 +112,12 @@ ipcMain.handle('autosave-now', async (_, { filePath, format }) => {
     if (rows.length === 0) return { success: false, error: 'Aucune donnée' };
 
     if (format === 'csv') {
-        const header = 'athlete_id,nom,prenom,sexe,age,equipe,peloton,distance_totale';
-        const lines = rows.map(r =>
-            [r.athlete_id, r.nom, r.prenom, r.sexe, r.age,
-            r.equipe, r.peloton, r.distance_totale].join(',')
-        );
+        const cols = Object.keys(rows[0]);
+        const header = cols.join(',');
+        const lines = rows.map(r => cols.map(c => r[c] ?? '').join(','));
         fs.writeFileSync(filePath, [header, ...lines].join('\n'), 'utf-8');
     } else {
         fs.writeFileSync(filePath, JSON.stringify(rows, null, 2), 'utf-8');
     }
-
     return { success: true, filePath };
 });

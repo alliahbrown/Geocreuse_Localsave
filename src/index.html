@@ -37,11 +37,9 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            background-image:
-                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
         }
 
-        /* ── Header ── */
         header {
             background: var(--green);
             border-bottom: 3px solid var(--green-light);
@@ -65,7 +63,6 @@
             font-weight: 900;
             color: var(--cream);
             letter-spacing: 0.02em;
-            line-height: 1;
         }
 
         header .header-sub {
@@ -101,7 +98,6 @@
             border-color: rgba(180, 60, 40, 0.3);
         }
 
-        /* ── Toolbar ── */
         .toolbar {
             padding: 0.75rem 2rem;
             display: flex;
@@ -121,7 +117,6 @@
             margin: 0 0.2rem;
         }
 
-        /* ── Buttons ── */
         button {
             padding: 0.5rem 0.95rem;
             border: 1px solid var(--border);
@@ -153,7 +148,6 @@
         button.primary:hover {
             background: var(--green-mid);
             border-color: var(--green-mid);
-            box-shadow: 0 4px 14px rgba(28, 42, 20, 0.24);
         }
 
         button:active {
@@ -167,7 +161,6 @@
             transform: none;
         }
 
-        /* ── Select ── */
         select {
             padding: 0.48rem 0.75rem;
             border: 1px solid var(--border);
@@ -181,7 +174,6 @@
             color: var(--text-mid);
             cursor: pointer;
             outline: none;
-            transition: border-color 0.18s;
         }
 
         select:focus {
@@ -189,7 +181,6 @@
             box-shadow: 0 0 0 3px rgba(78, 120, 64, 0.12);
         }
 
-        /* ── Autosave badge ── */
         #autosave-status {
             font-size: 0.72rem;
             font-weight: 500;
@@ -201,7 +192,6 @@
             white-space: nowrap;
         }
 
-        /* ── Message bar ── */
         #message {
             padding: 0.4rem 2rem;
             font-size: 0.78rem;
@@ -209,7 +199,6 @@
             color: var(--muted);
             min-height: 28px;
             border-bottom: 1px solid transparent;
-            transition: all 0.2s;
         }
 
         #message.success {
@@ -224,14 +213,46 @@
             border-bottom-color: rgba(180, 60, 40, 0.18);
         }
 
-        /* ── Main content ── */
-        .container {
-            padding: 1.8rem 2rem 3rem;
-            flex: 1;
-            animation: fadeUp 0.5s 0.2s ease both;
+        .tabs {
+            display: flex;
+            padding: 0 2rem;
+            background: var(--paper);
+            border-bottom: 2px solid var(--border);
         }
 
-        /* ── Page title inside container ── */
+        .tab {
+            padding: 0.75rem 1.2rem;
+            cursor: pointer;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--muted);
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: color 0.18s, border-color 0.18s;
+        }
+
+        .tab:hover {
+            color: var(--green-mid);
+        }
+
+        .tab.active {
+            color: var(--green);
+            border-bottom-color: var(--green);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 1.8rem 2rem 3rem;
+            flex: 1;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeUp 0.3s ease both;
+        }
+
         .page-header {
             display: flex;
             align-items: baseline;
@@ -239,7 +260,7 @@
             margin-bottom: 1rem;
         }
 
-        #count {
+        .count {
             font-size: 0.72rem;
             text-transform: uppercase;
             letter-spacing: 0.15em;
@@ -247,19 +268,15 @@
             font-weight: 600;
         }
 
-        /* ── Table card ── */
         .table-card {
             background: var(--paper);
             border: 1px solid var(--border);
             border-radius: 3px;
             overflow: hidden;
-            box-shadow:
-                0 1px 2px var(--shadow),
-                0 6px 28px rgba(43, 38, 24, 0.07);
+            box-shadow: 0 1px 2px var(--shadow), 0 6px 28px rgba(43, 38, 24, 0.07);
             position: relative;
         }
 
-        /* green top stripe — matches the theme (yellow vars are undefined in design system) */
         .table-card::before {
             content: '';
             position: absolute;
@@ -268,6 +285,10 @@
             right: 0;
             height: 3px;
             background: linear-gradient(90deg, var(--green) 0%, var(--green-light) 100%);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
         }
 
         table {
@@ -283,12 +304,12 @@
             padding: 0.7rem 1rem;
             text-align: left;
             font-size: 0.68rem;
-            font-family: 'Source Sans 3', sans-serif;
             text-transform: uppercase;
             letter-spacing: 0.16em;
             color: var(--text-mid);
             font-weight: 700;
             border-bottom: 1px solid var(--border);
+            white-space: nowrap;
         }
 
         td {
@@ -296,21 +317,17 @@
             border-bottom: 1px solid rgba(200, 212, 187, 0.5);
             font-size: 0.88rem;
             color: var(--text);
+            white-space: nowrap;
         }
 
         tr:last-child td {
             border-bottom: none;
         }
 
-        tbody tr {
-            transition: background 0.12s;
-        }
-
         tbody tr:hover td {
             background: rgba(200, 212, 187, 0.18);
         }
 
-        /* ── Footer ── */
         .footer-note {
             text-align: center;
             font-size: 0.72rem;
@@ -320,7 +337,6 @@
             text-transform: uppercase;
         }
 
-        /* ── Animations ── */
         @keyframes fadeUp {
             from {
                 opacity: 0;
@@ -344,27 +360,6 @@
                 transform: translateY(0);
             }
         }
-
-        /* ── Responsive ── */
-        @media (max-width: 680px) {
-
-            header,
-            .toolbar,
-            .container {
-                padding-left: 1rem;
-                padding-right: 1rem;
-            }
-
-            th,
-            td {
-                padding: 0.6rem 0.7rem;
-                font-size: 0.8rem;
-            }
-
-            header h1 {
-                font-size: 1.1rem;
-            }
-        }
     </style>
 </head>
 
@@ -380,16 +375,14 @@
 
     <div class="toolbar">
         <button class="primary" id="btn-sync">Synchroniser</button>
+        <div class="toolbar-divider"></div>
         <button id="btn-export-csv">Export CSV</button>
         <button id="btn-export-json">Export JSON</button>
-
         <div class="toolbar-divider"></div>
-
         <select id="autosave-format" title="Format">
             <option value="csv">CSV</option>
             <option value="json">JSON</option>
         </select>
-
         <select id="autosave-frequency" title="Fréquence">
             <option value="5">5 s</option>
             <option value="30">30 s</option>
@@ -397,42 +390,79 @@
             <option value="300">5 min</option>
             <option value="600">10 min</option>
         </select>
-
         <button id="btn-start-autosave">Auto-sauvegarde</button>
         <button id="btn-stop-autosave" disabled>Arrêter</button>
-
         <span id="autosave-status"></span>
     </div>
 
     <div id="message"></div>
 
-    <div class="container">
-        <div class="page-header">
-            <div id="count"></div>
-        </div>
+    <div class="tabs">
+        <div class="tab active" data-tab="results">Résultats</div>
+        <div class="tab" data-tab="athletes">Athlètes</div>
+        <div class="tab" data-tab="segments">Segments</div>
+    </div>
 
+    <!-- Résultats -->
+    <div id="tab-results" class="tab-content active">
+        <div class="page-header">
+            <div class="count" id="count-results"></div>
+        </div>
         <div class="table-card">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nom</th>
-                        <th>Prénom</th>
-                        <th>Sexe</th>
-                        <th>Âge</th>
-                        <th>Équipe</th>
-                        <th>Peloton</th>
-                        <th>Temps total</th>
-                        <th>Distance (km)</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody"></tbody>
-            </table>
+            <div class="table-wrapper">
+                <table>
+                    <thead id="thead-results"></thead>
+                    <tbody id="tbody-results"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Athlètes -->
+    <div id="tab-athletes" class="tab-content">
+        <div class="page-header">
+            <div class="count" id="count-athletes"></div>
+        </div>
+        <div class="table-card">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Prénom</th>
+                            <th>Nom</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-athletes"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Segments -->
+    <div id="tab-segments" class="tab-content">
+        <div class="page-header">
+            <div class="count" id="count-segments"></div>
+        </div>
+        <div class="table-card">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Étape</th>
+                            <th>Segment</th>
+                            <th>Date</th>
+                            <th>ID segment</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-segments"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <div class="footer-note">Grand Tour de Creuse · Mai 2026</div>
-
     <script src="renderer.js"></script>
 </body>
 

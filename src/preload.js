@@ -7,5 +7,7 @@ contextBridge.exposeInMainWorld('api', {
     sync: () => ipcRenderer.invoke('sync'),
     exportCsv: () => ipcRenderer.invoke('export-csv'),
     exportJson: () => ipcRenderer.invoke('export-json'),
+    autosavePickAndStart: (opts) => ipcRenderer.invoke('autosave-pick-and-start', opts),
+    autosaveNow: (opts) => ipcRenderer.invoke('autosave-now', opts),
     onAutoSync: (cb) => ipcRenderer.on('auto-sync-done', (_, data) => cb(data)),
 });
