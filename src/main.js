@@ -36,16 +36,14 @@ app.whenReady().then(async () => {
     sync.pull().catch((e) => console.log('Sync échouée :', e.message, e));
 });
 
-ipcMain.handle('get-results', () => {
-    return db.getResults();
-});
-
-
+ipcMain.handle('get-athletes', () => db.getAthletes());
+ipcMain.handle('get-segments-stages', () => db.getSegmentsStages());
+ipcMain.handle('get-results', () => db.getResults());
 
 ipcMain.handle('sync', async () => {
     try {
-        const count = await sync.pull();
-        return { success: true, count };
+        const counts = await sync.pull();
+        return { success: true, counts };
     } catch (e) {
         return { success: false, error: e.message };
     }
