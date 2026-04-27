@@ -25,7 +25,6 @@ async function pull() {
         fetchJson('/segments-stages'),
         fetchJson('/results'),
     ]);
-
     db.upsertAthletes(athletes);
     db.upsertSegmentsStages(segments);
     db.upsertResults(results);

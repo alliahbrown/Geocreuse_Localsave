@@ -46,9 +46,9 @@ app.whenReady().then(async () => {
 
 // ── Handlers IPC ─────────────────────────────────────────────────
 
-ipcMain.handle('get-athletes', () => db.getAthletes());
-ipcMain.handle('get-segments-stages', () => db.getSegmentsStages());
-ipcMain.handle('get-results', () => db.getResults());
+ipcMain.handle('get-results', async () => await db.getResults());
+ipcMain.handle('get-athletes', async () => await db.getAthletes());
+ipcMain.handle('get-segments-stages', async () => await db.getSegmentsStages());
 
 ipcMain.handle('sync', async () => {
     try {
@@ -61,24 +61,28 @@ ipcMain.handle('sync', async () => {
 
 // Export CSV
 ipcMain.handle('export-csv', async () => {
-    const rows = db.getResults();
-    if (rows.length === 0) return { success: false, error: 'Aucune donnée à exporter' };
+    const rows = await db.getResults();
+
+    if (!rows.length) {
+        return { success: false, error: 'Aucune donnée à exporter' };
+    }
 
     const { filePath } = await dialog.showSaveDialog({
-        title: 'Exporter en CSV',
-        defaultPath: 'geocreuse-resultats.csv',
-        filters: [{ name: 'CSV', extensions: ['csv'] }],
+        title: 'Exporter CSV',
+        defaultPath: 'results.csv'
     });
-    if (!filePath) return { success: false, error: 'Annulé' };
 
-    const allRows = db.getResults();
-    const cols = allRows.length ? Object.keys(allRows[0]) : [];
-    const header = cols.join(',');
-    const lines = allRows.map(r => cols.map(c => r[c] ?? '').join(','));
-    fs.writeFileSync(filePath, [header, ...lines].join('\n'), 'utf-8');
+    if (!filePath) return { success: false };
+
+    const cols = Object.keys(rows[0]);
+    const content = [
+        cols.join(','),
+        ...rows.map(r => cols.map(c => r[c] ?? '').join(','))
+    ].join('\n');
+
+    fs.writeFileSync(filePath, content);
     return { success: true, filePath };
 });
-
 // Export JSON
 ipcMain.handle('export-json', async () => {
     const rows = db.getResults();

@@ -66,6 +66,7 @@ function save() {
 // les athletes 
 
 function getAthletes() {
+    console.log("test");
     const stmt = db.prepare('SELECT * FROM athletes ORDER BY lastname ASC');
     const rows = [];
     while (stmt.step()) rows.push(stmt.getAsObject());
@@ -74,6 +75,7 @@ function getAthletes() {
 }
 
 function upsertAthletes(rows) {
+
     for (const r of rows) {
         db.run(`
       INSERT INTO athletes (athlete_id, firstname, lastname)
@@ -98,6 +100,7 @@ function getSegmentsStages() {
 }
 
 function upsertSegmentsStages(rows) {
+
     db.run('DELETE FROM segments_stages'); // on remplace tout (structure dynamique)
     for (const r of rows) {
         db.run(`
