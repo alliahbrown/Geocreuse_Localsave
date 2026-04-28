@@ -3,161 +3,362 @@
 
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Géocreuse — Résultats</title>
     <style>
-        * {
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;500;600&display=swap');
+
+        *,
+        *::before,
+        *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
 
+        :root {
+            --green: #3a5a2e;
+            --green-mid: #4e7840;
+            --green-light: #6fa05a;
+            --cream: #f5f0e8;
+            --cream-dark: #ede6d6;
+            --paper: #faf7f2;
+            --text: #1c2a14;
+            --text-mid: #445538;
+            --muted: #8a9980;
+            --border: #c8d4bb;
+            --shadow: rgba(28, 42, 20, 0.12);
+        }
+
         body {
-            font-family: system-ui, sans-serif;
-            background: #f4f6f9;
-            color: #333;
+            background: var(--cream);
+            color: var(--text);
+            font-family: 'Source Sans 3', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
         }
 
         header {
-            background: #1a73e8;
-            color: white;
-            padding: 16px 24px;
+            background: var(--green);
+            border-bottom: 3px solid var(--green-light);
+            padding: 0.9rem 2rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            box-shadow: 0 2px 12px var(--shadow);
+            animation: fadeDown 0.5s ease forwards;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
         }
 
         header h1 {
-            font-size: 1.1rem;
-            font-weight: 500;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.35rem;
+            font-weight: 900;
+            color: var(--cream);
+            letter-spacing: 0.02em;
+        }
+
+        header .header-sub {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--green-light);
+            font-weight: 600;
         }
 
         #status {
-            font-size: 0.8rem;
-            padding: 4px 10px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.2);
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            padding: 0.3rem 0.75rem;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--green-light);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: background 0.3s, color 0.3s;
         }
 
         #status.online {
-            background: #34a853;
+            background: rgba(111, 160, 90, 0.25);
+            color: #a8d890;
+            border-color: rgba(111, 160, 90, 0.4);
         }
 
         #status.offline {
-            background: #ea4335;
+            background: rgba(180, 60, 40, 0.25);
+            color: #f09080;
+            border-color: rgba(180, 60, 40, 0.3);
         }
 
         .toolbar {
-            padding: 10px 24px;
+            padding: 0.75rem 2rem;
             display: flex;
             align-items: center;
-            gap: 8px;
-            background: white;
-            border-bottom: 1px solid #ddd;
+            gap: 0.5rem;
+            background: var(--paper);
+            border-bottom: 1px solid var(--border);
             flex-wrap: wrap;
+            box-shadow: 0 1px 4px var(--shadow);
+            animation: fadeDown 0.5s 0.1s ease both;
         }
 
         .toolbar-divider {
             width: 1px;
-            height: 24px;
-            background: #ddd;
-            margin: 0 4px;
+            height: 22px;
+            background: var(--border);
+            margin: 0 0.2rem;
         }
 
         button {
-            padding: 7px 14px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
+            padding: 0.5rem 0.95rem;
+            border: 1px solid var(--border);
+            border-radius: 2px;
             cursor: pointer;
-            font-size: 0.85rem;
-            background: white;
-            color: #333;
+            font-size: 0.72rem;
+            font-family: 'Source Sans 3', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            background: var(--cream);
+            color: var(--text-mid);
+            transition: background 0.18s, border-color 0.18s, color 0.18s, box-shadow 0.18s;
         }
 
         button:hover {
-            background: #f0f0f0;
+            background: var(--cream-dark);
+            border-color: var(--green-light);
+            color: var(--green);
         }
 
         button.primary {
-            background: #1a73e8;
-            color: white;
-            border-color: #1a73e8;
+            background: var(--green);
+            color: var(--cream);
+            border-color: var(--green);
+            box-shadow: 0 2px 8px rgba(28, 42, 20, 0.18);
         }
 
         button.primary:hover {
-            background: #1557b0;
+            background: var(--green-mid);
+            border-color: var(--green-mid);
+        }
+
+        button:active {
+            transform: scale(0.98);
         }
 
         button:disabled {
-            opacity: 0.45;
+            opacity: 0.4;
             cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
         }
 
         select {
-            padding: 6px 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            background: white;
-            color: #333;
+            padding: 0.48rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            font-size: 0.72rem;
+            font-family: 'Source Sans 3', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            background: var(--cream);
+            color: var(--text-mid);
             cursor: pointer;
+            outline: none;
+        }
+
+        select:focus {
+            border-color: var(--green-mid);
+            box-shadow: 0 0 0 3px rgba(78, 120, 64, 0.12);
         }
 
         #autosave-status {
-            font-size: 0.8rem;
-            color: #555;
-            padding: 4px 10px;
-            border-radius: 6px;
-            background: #f0f0f0;
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--muted);
+            padding: 0.3rem 0.7rem;
+            border-radius: 2px;
+            background: var(--cream-dark);
+            border: 1px solid var(--border);
             white-space: nowrap;
         }
 
         #message {
-            padding: 6px 24px;
-            font-size: 0.82rem;
-            color: #555;
-            min-height: 26px;
-        }
-
-        .container {
-            padding: 0 24px 24px;
-        }
-
-        #count {
+            padding: 0.4rem 2rem;
             font-size: 0.78rem;
-            color: #888;
-            margin: 10px 0 6px;
+            font-weight: 500;
+            color: var(--muted);
+            min-height: 28px;
+            border-bottom: 1px solid transparent;
+        }
+
+        #message.success {
+            background: rgba(58, 90, 46, 0.07);
+            color: var(--green-mid);
+            border-bottom-color: rgba(58, 90, 46, 0.2);
+        }
+
+        #message.error {
+            background: rgba(180, 60, 40, 0.07);
+            color: #b43c28;
+            border-bottom-color: rgba(180, 60, 40, 0.18);
+        }
+
+        .tabs {
+            display: flex;
+            padding: 0 2rem;
+            background: var(--paper);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tab {
+            padding: 0.75rem 1.2rem;
+            cursor: pointer;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--muted);
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: color 0.18s, border-color 0.18s;
+        }
+
+        .tab:hover {
+            color: var(--green-mid);
+        }
+
+        .tab.active {
+            color: var(--green);
+            border-bottom-color: var(--green);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 1.8rem 2rem 3rem;
+            flex: 1;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeUp 0.3s ease both;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .count {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .table-card {
+            background: var(--paper);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            box-shadow: 0 1px 2px var(--shadow), 0 6px 28px rgba(43, 38, 24, 0.07);
+            position: relative;
+        }
+
+        .table-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--green) 0%, var(--green-light) 100%);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        thead {
+            background: var(--cream-dark);
         }
 
         th {
-            background: #e8f0fe;
-            padding: 9px 14px;
+            padding: 0.7rem 1rem;
             text-align: left;
-            font-size: 0.82rem;
-            color: #1a73e8;
-            font-weight: 500;
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--text-mid);
+            font-weight: 700;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
         }
 
         td {
-            padding: 9px 14px;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 0.85rem;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(200, 212, 187, 0.5);
+            font-size: 0.88rem;
+            color: var(--text);
+            white-space: nowrap;
         }
 
         tr:last-child td {
             border-bottom: none;
         }
 
-        tr:hover td {
-            background: #f8f9ff;
+        tbody tr:hover td {
+            background: rgba(200, 212, 187, 0.18);
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 0.72rem;
+            color: var(--muted);
+            padding: 1rem 0 1.5rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
@@ -165,22 +366,23 @@
 <body>
 
     <header>
-        <h1>Géocreuse — Résultats</h1>
+        <div class="header-left">
+            <h1>Géocreuse</h1>
+            <span class="header-sub">Résultats</span>
+        </div>
         <span id="status">...</span>
     </header>
 
     <div class="toolbar">
         <button class="primary" id="btn-sync">Synchroniser</button>
+        <div class="toolbar-divider"></div>
         <button id="btn-export-csv">Export CSV</button>
         <button id="btn-export-json">Export JSON</button>
-
         <div class="toolbar-divider"></div>
-
         <select id="autosave-format" title="Format">
             <option value="csv">CSV</option>
             <option value="json">JSON</option>
         </select>
-
         <select id="autosave-frequency" title="Fréquence">
             <option value="5">5 s</option>
             <option value="30">30 s</option>
@@ -188,35 +390,79 @@
             <option value="300">5 min</option>
             <option value="600">10 min</option>
         </select>
-
         <button id="btn-start-autosave">Auto-sauvegarde</button>
         <button id="btn-stop-autosave" disabled>Arrêter</button>
-
         <span id="autosave-status"></span>
     </div>
 
     <div id="message"></div>
 
-    <div class="container">
-        <div id="count"></div>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nom</th>
-                    <th>Prénom</th>
-                    <th>Sexe</th>
-                    <th>Âge</th>
-                    <th>Équipe</th>
-                    <th>Peloton</th>
-                    <th>Temps total</th>
-                    <th>Distance (km)</th>
-                </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-        </table>
+    <div class="tabs">
+        <div class="tab active" data-tab="results">Résultats</div>
+        <div class="tab" data-tab="athletes">Athlètes</div>
+        <div class="tab" data-tab="segments">Segments</div>
     </div>
 
+    <!-- Résultats -->
+    <div id="tab-results" class="tab-content active">
+        <div class="page-header">
+            <div class="count" id="count-results"></div>
+        </div>
+        <div class="table-card">
+            <div class="table-wrapper">
+                <table>
+                    <thead id="thead-results"></thead>
+                    <tbody id="tbody-results"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Athlètes -->
+    <div id="tab-athletes" class="tab-content">
+        <div class="page-header">
+            <div class="count" id="count-athletes"></div>
+        </div>
+        <div class="table-card">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Prénom</th>
+                            <th>Nom</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-athletes"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Segments -->
+    <div id="tab-segments" class="tab-content">
+        <div class="page-header">
+            <div class="count" id="count-segments"></div>
+        </div>
+        <div class="table-card">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Étape</th>
+                            <th>Segment</th>
+                            <th>Date</th>
+                            <th>ID segment</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-segments"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-note">Grand Tour de Creuse · Mai 2026</div>
     <script src="renderer.js"></script>
 </body>
 

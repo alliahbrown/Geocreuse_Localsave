@@ -1,24 +1,26 @@
+// ── ELEMENTS ─────────────────────────────────
 const btnSync = document.getElementById('btn-sync');
-const tbody = document.getElementById('tbody');
 const message = document.getElementById('message');
 const statusEl = document.getElementById('status');
-const countEl = document.getElementById('count');
 
+const tbodyResults = document.getElementById('tbody-results');
+const theadResults = document.getElementById('thead-results');
+const countResults = document.getElementById('count-results');
 
-// ── Détection online/offline ────────────────────────────────────
+const tbodyAthletes = document.getElementById('tbody-athletes');
+const countAthletes = document.getElementById('count-athletes');
+
+const tbodySegments = document.getElementById('tbody-segments');
+const countSegments = document.getElementById('count-segments');
+
+// ── ONLINE STATUS ─────────────────────────────
 async function checkRealConnectivity() {
     try {
-        // Un fetch léger vers un endpoint fiable, avec timeout court
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 3000);
-
         await fetch('https://www.google.com/favicon.ico', {
-            method: 'HEAD',
-            mode: 'no-cors',
-            signal: controller.signal,
-            cache: 'no-store',
+            method: 'HEAD', mode: 'no-cors', signal: controller.signal,
         });
-
         clearTimeout(timeout);
         return true;
     } catch {
@@ -28,178 +30,188 @@ async function checkRealConnectivity() {
 
 async function updateOnlineStatus() {
     const isOnline = await checkRealConnectivity();
-
-    if (isOnline) {
-        statusEl.textContent = '🟢 En ligne';
-        statusEl.className = 'online';
-        btnSync.disabled = false;
-    } else {
-        statusEl.textContent = '🔴 Hors ligne';
-        statusEl.className = 'offline';
-        btnSync.disabled = true;
-    }
+    statusEl.textContent = isOnline ? '🟢 En ligne' : '🔴 Hors ligne';
+    statusEl.className = isOnline ? 'online' : 'offline';
+    btnSync.disabled = !isOnline;
 }
 
-// Garder les events natifs comme déclencheurs, mais vérifier vraiment
-window.addEventListener('online', updateOnlineStatus);
-window.addEventListener('offline', updateOnlineStatus);
-
-// Vérification périodique (toutes les 10s)
-setInterval(updateOnlineStatus, 10_000);
-
+setInterval(updateOnlineStatus, 10000);
 updateOnlineStatus();
-// ── Affichage des données ───────────────────────────────────────
-function formatTemps(secondes) {
-    if (!secondes) return '—';
-    const h = Math.floor(secondes / 3600);
-    const m = Math.floor((secondes % 3600) / 60);
-    const s = secondes % 60;
-    return `${h}h${String(m).padStart(2, '0')}m${String(s).padStart(2, '0')}s`;
-}
 
+// ── RENDER RESULTS (colonnes dynamiques) ──────
 function renderResults(rows) {
-    tbody.innerHTML = '';
-    countEl.textContent = `${rows.length} athlète(s) en base locale`;
+    countResults.textContent = `${rows.length} résultats`;
 
-    if (rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#aaa">Aucune donnée — cliquez sur Synchroniser</td></tr>';
+    if (!rows || rows.length === 0) {
+        theadResults.innerHTML = '';
+        tbodyResults.innerHTML = `<tr><td style="color:var(--muted);padding:1rem">Aucune donnée</td></tr>`;
         return;
     }
 
-    for (const r of rows) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-      <td>${r.athlete_id ?? '—'}</td>
-      <td>${r.nom ?? '—'}</td>
-      <td>${r.prenom ?? '—'}</td>
-      <td>${r.sexe ?? '—'}</td>
-      <td>${r.age ?? '—'}</td>
-      <td>${r.equipe ?? '—'}</td>
-      <td>${r.peloton ?? '—'}</td>
-      <td>${r.distance_totale != null ? r.distance_totale.toFixed(2) : '—'}</td>
-    `;
-        tbody.appendChild(tr);
-    }
+    // Génère les titres de colonnes automatiquement (sans synced_at)
+    const cols = Object.keys(rows[0]).filter(c => c !== 'synced_at');
+    theadResults.innerHTML = '<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>';
+    tbodyResults.innerHTML = rows.map(r =>
+        '<tr>' + cols.map(c => `<td>${r[c] ?? '—'}</td>`).join('') + '</tr>'
+    ).join('');
 }
 
-// ── Chargement initial depuis SQLite local ──────────────────────
-async function loadLocal() {
-    const rows = await window.api.getResults();
-    console.log("rows :", rows);
-    renderResults(rows);
+// ── RENDER ATHLETES ───────────────────────────
+function renderAthletes(rows) {
+    countAthletes.textContent = `${rows.length} athlètes`;
+    tbodyAthletes.innerHTML = rows.length === 0
+        ? '<tr><td colspan="3" style="color:var(--muted);padding:1rem">Aucune donnée</td></tr>'
+        : rows.map(a => `
+            <tr>
+                <td>${a.athlete_id ?? '—'}</td>
+                <td>${a.firstname ?? '—'}</td>
+                <td>${a.lastname ?? '—'}</td>
+            </tr>`).join('');
 }
 
-// ── Synchronisation ─────────────────────────────────────────────
+// ── RENDER SEGMENTS ───────────────────────────
+function renderSegments(rows) {
+    countSegments.textContent = `${rows.length} segments`;
+    tbodySegments.innerHTML = rows.length === 0
+        ? '<tr><td colspan="5" style="color:var(--muted);padding:1rem">Aucune donnée</td></tr>'
+        : rows.map(s => `
+            <tr>
+                <td>${s.nom ?? '—'}</td>
+                <td>${s.etape ?? '—'}</td>
+                <td>${s.segment ?? '—'}</td>
+                <td>${s.date_etape ?? '—'}</td>
+                <td>${s.id_segment ?? '—'}</td>
+            </tr>`).join('');
+}
+
+// ── LOADERS ───────────────────────────────────
+async function loadAll() {
+    const [results, athletes, segments] = await Promise.all([
+        window.api.getResults(),
+        window.api.getAthletes(),
+        window.api.getSegmentsStages(),
+    ]);
+    renderResults(results);
+    renderAthletes(athletes);
+    renderSegments(segments);
+}
+
+// ── SYNC manuelle ─────────────────────────────
 btnSync.addEventListener('click', async () => {
     btnSync.disabled = true;
-    message.textContent = 'Synchronisation en cours...';
+    message.textContent = 'Synchronisation...';
+    message.className = '';
+
     const result = await window.api.sync();
 
     if (result.success) {
-        message.textContent = `${result.count} résultat(s) synchronisé(s) !`;
-        await loadLocal();
-    } else {
-        message.textContent = ` Erreur : ${result.error}`;
-    }
-
-    btnSync.disabled = !navigator.onLine; // ← débloque si online
-    setTimeout(() => { message.textContent = ''; }, 4000);
-});
-
-// ── Démarrage ───────────────────────────────────────────────────
-loadLocal();
-
-
-// ── Export ──────────────────────────────────────────────────────
-document.getElementById('btn-export-csv').addEventListener('click', async () => {
-    const result = await window.api.exportCsv();
-    if (result.success) {
-        message.textContent = `CSV exporté : ${result.filePath}`;
+        const c = result.counts;
+        message.textContent = `Sync : ${c.athletes} athlètes, ${c.segments} segments, ${c.results} résultats`;
+        message.className = 'success';
+        await loadAll();
     } else {
         message.textContent = `${result.error}`;
+        message.className = 'error';
     }
-    setTimeout(() => { message.textContent = ''; }, 4000);
+
+    setTimeout(() => { message.textContent = ''; message.className = ''; }, 5000);
+    btnSync.disabled = false;
+});
+
+// ── SYNC auto au démarrage ────────────────────
+window.api.onAutoSync(async (result) => {
+    if (result.success) {
+        const c = result.counts;
+        message.textContent = `Sync auto : ${c.athletes} athlètes, ${c.segments} segments, ${c.results} résultats`;
+        message.className = 'success';
+        await loadAll();
+    } else {
+        message.textContent = `Sync auto ignorée : ${result.error}`;
+    }
+    setTimeout(() => { message.textContent = ''; message.className = ''; }, 5000);
+});
+
+// ── TABS ──────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+    });
+});
+
+// ── EXPORT ────────────────────────────────────
+document.getElementById('btn-export-csv').addEventListener('click', async () => {
+    const result = await window.api.exportCsv();
+    message.textContent = result.success ? `CSV exporté : ${result.filePath}` : `${result.error}`;
+    message.className = result.success ? 'success' : 'error';
+    setTimeout(() => { message.textContent = ''; message.className = ''; }, 4000);
 });
 
 document.getElementById('btn-export-json').addEventListener('click', async () => {
     const result = await window.api.exportJson();
-    if (result.success) {
-        message.textContent = `JSON exporté : ${result.filePath}`;
-    } else {
-        message.textContent = `${result.error}`;
-    }
-    setTimeout(() => { message.textContent = ''; }, 4000);
+    message.textContent = result.success ? `JSON exporté : ${result.filePath}` : `${result.error}`;
+    message.className = result.success ? 'success' : 'error';
+    setTimeout(() => { message.textContent = ''; message.className = ''; }, 4000);
 });
 
-
-// ── Auto-save ────────────────────────────────────────────────────
+// ── AUTO-SAUVEGARDE ───────────────────────────
 let autosaveInterval = null;
-let autosaveFilePath = null;
+let autosavePath = null;
 let autosaveFormat = null;
-let countdown = 0;
-let countdownInterval = null;
 
-const btnStartAutosave = document.getElementById('btn-start-autosave');
-const btnStopAutosave = document.getElementById('btn-stop-autosave');
-const autosaveStatus = document.getElementById('autosave-status');
-const selectFormat = document.getElementById('autosave-format');
-const selectFrequency = document.getElementById('autosave-frequency');
+document.getElementById('btn-start-autosave').addEventListener('click', async () => {
 
-async function doAutosave() {
-    const result = await window.api.autosaveNow({ filePath: autosaveFilePath, format: autosaveFormat });
-    const now = new Date().toLocaleTimeString();
-    if (result.success) {
-        autosaveStatus.textContent = `Dernière sauvegarde : ${now} → ${autosaveFilePath}`;
-    } else {
-        autosaveStatus.textContent = `Erreur : ${result.error}`;
-    }
-}
+    const format = document.getElementById('autosave-format').value;
+    const freqMs = parseInt(document.getElementById('autosave-frequency').value) * 1000;
 
-function startCountdown(seconds) {
-    clearInterval(countdownInterval);
-    countdown = seconds;
-    countdownInterval = setInterval(() => {
-        countdown--;
-        const mins = Math.floor(countdown / 60);
-        const secs = countdown % 60;
-        const label = mins > 0 ? `${mins}m${String(secs).padStart(2, '0')}s` : `${secs}s`;
-        autosaveStatus.textContent = `Prochaine sauvegarde dans ${label}…`;
-        if (countdown <= 0) countdown = parseInt(selectFrequency.value);
-    }, 1000);
-}
-
-btnStartAutosave.addEventListener('click', async () => {
-    const format = selectFormat.value;
-    const intervalSec = parseInt(selectFrequency.value);
-
-    const pick = await window.api.autosavePickAndStart({ format, intervalMs: intervalSec * 1000 });
+    const pick = await window.api.autosavePickAndStart({ format });
     if (!pick.success) return;
 
-    autosaveFilePath = pick.filePath;
+    autosavePath = pick.filePath;
     autosaveFormat = format;
 
-    // Save immediately then schedule
-    await doAutosave();
-    startCountdown(intervalSec);
+    document.getElementById('btn-start-autosave').disabled = true;
+    document.getElementById('btn-stop-autosave').disabled = false;
 
+    let remaining = freqMs / 1000;
+
+    await window.api.autosaveNow({ filePath: autosavePath, format: autosaveFormat });
+    countdownInterval = setInterval(() => {
+        document.getElementById('autosave-status').textContent =
+            `Prochaine sauvegarde dans ${remaining}s`;
+        remaining--;
+
+        if (remaining < 0) remaining = freqMs / 1000;
+    }, 1000);
     autosaveInterval = setInterval(async () => {
-        await doAutosave();
-        startCountdown(intervalSec);
-    }, intervalSec * 1000);
 
-    btnStartAutosave.disabled = true;
-    btnStopAutosave.disabled = false;
-    selectFormat.disabled = true;
-    selectFrequency.disabled = true;
+        const syncRes = await window.api.sync();
+        if (syncRes.success) {
+            await loadAll();
+        }
+
+        const res = await window.api.autosaveNow({ filePath: autosavePath, format: autosaveFormat });
+
+        if (!res.success) {
+            document.getElementById('autosave-status').textContent = `Échec`;
+        }
+        // reset du compteur après chaque sauvegarde
+        remaining = freqMs / 1000;
+    }, freqMs);
 });
 
-btnStopAutosave.addEventListener('click', () => {
+document.getElementById('btn-stop-autosave').addEventListener('click', () => {
     clearInterval(autosaveInterval);
     clearInterval(countdownInterval);
+
     autosaveInterval = null;
-    autosaveStatus.textContent = 'Sauvegarde automatique arrêtée.';
-    btnStartAutosave.disabled = false;
-    btnStopAutosave.disabled = true;
-    selectFormat.disabled = false;
-    selectFrequency.disabled = false;
+    countdownInterval = null;
+
+    document.getElementById('btn-start-autosave').disabled = false;
+    document.getElementById('btn-stop-autosave').disabled = true;
+    document.getElementById('autosave-status').textContent = 'Sauvegarde automatique arrêtée';
 });
+// ── INIT ──────────────────────────────────────
+loadAll();
