@@ -13,7 +13,14 @@
       {
         "from": ".env",
         "to": ".env"
+      },
+      {
+        "from": "node_modules/sql.js/dist/sql-wasm.wasm",
+        "to": "sql-wasm.wasm"
       }
+    ],
+    "asarUnpack": [
+      "node_modules/sql.js/dist/*.wasm"
     ],
     "win": {
       "target": "portable"

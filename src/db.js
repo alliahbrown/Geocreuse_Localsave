@@ -8,9 +8,15 @@ let db;
 let SQL;
 
 async function init() {
-    const initSqlJs = require('sql.js');
-    SQL = await initSqlJs();
 
+    SQL = await initSqlJs({
+        locateFile: file => {
+            if (app.isPackaged) {
+                return path.join(process.resourcesPath, file);
+            }
+            return path.join(__dirname, '../node_modules/sql.js/dist', file);
+        }
+    });
     // Charge la DB existante ou en crée une nouvelle
     if (fs.existsSync(DB_PATH)) {
         const fileBuffer = fs.readFileSync(DB_PATH);
