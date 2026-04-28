@@ -186,6 +186,12 @@ document.getElementById('btn-start-autosave').addEventListener('click', async ()
         if (remaining < 0) remaining = freqMs / 1000;
     }, 1000);
     autosaveInterval = setInterval(async () => {
+
+        const syncRes = await window.api.sync();
+        if (syncRes.success) {
+            await loadAll();
+        }
+
         const res = await window.api.autosaveNow({ filePath: autosavePath, format: autosaveFormat });
 
         if (!res.success) {
