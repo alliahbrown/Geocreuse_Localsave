@@ -162,6 +162,7 @@ let autosavePath = null;
 let autosaveFormat = null;
 
 document.getElementById('btn-start-autosave').addEventListener('click', async () => {
+
     const format = document.getElementById('autosave-format').value;
     const freqMs = parseInt(document.getElementById('autosave-frequency').value) * 1000;
 
@@ -174,23 +175,37 @@ document.getElementById('btn-start-autosave').addEventListener('click', async ()
     document.getElementById('btn-start-autosave').disabled = true;
     document.getElementById('btn-stop-autosave').disabled = false;
 
-    await window.api.autosaveNow({ filePath: autosavePath, format: autosaveFormat });
+    let remaining = freqMs / 1000;
 
+    await window.api.autosaveNow({ filePath: autosavePath, format: autosaveFormat });
+    countdownInterval = setInterval(() => {
+        document.getElementById('autosave-status').textContent =
+            `Prochaine sauvegarde dans ${remaining}s`;
+        remaining--;
+
+        if (remaining < 0) remaining = freqMs / 1000;
+    }, 1000);
     autosaveInterval = setInterval(async () => {
         const res = await window.api.autosaveNow({ filePath: autosavePath, format: autosaveFormat });
-        const now = new Date().toLocaleTimeString();
-        document.getElementById('autosave-status').textContent =
-            res.success ? `${now}` : `Échec`;
+
+        if (!res.success) {
+            document.getElementById('autosave-status').textContent = `Échec`;
+        }
+        // reset du compteur après chaque sauvegarde
+        remaining = freqMs / 1000;
     }, freqMs);
 });
 
 document.getElementById('btn-stop-autosave').addEventListener('click', () => {
     clearInterval(autosaveInterval);
+    clearInterval(countdownInterval);
+
     autosaveInterval = null;
+    countdownInterval = null;
+
     document.getElementById('btn-start-autosave').disabled = false;
     document.getElementById('btn-stop-autosave').disabled = true;
-    document.getElementById('autosave-status').textContent = '';
+    document.getElementById('autosave-status').textContent = 'Sauvegarde automatique arrêtée';
 });
-
 // ── INIT ──────────────────────────────────────
 loadAll();
