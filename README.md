@@ -11,6 +11,8 @@ Rendez-vous sur la page des releases du projet :
 
 
 **[Télécharger la dernière version](../../releases/latest)**
+ne pas pubkier git 
+
 
 | Système | Fichier à télécharger |
 |---|---|
