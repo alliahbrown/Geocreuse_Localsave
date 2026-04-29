@@ -1,4 +1,5 @@
-// ── ELEMENTS ─────────────────────────────────
+// ── ÉLÉMENTS ──────────────────────────────────
+// Références aux éléments du DOM utilisés dans tout le fichier
 const btnSync = document.getElementById('btn-sync');
 const message = document.getElementById('message');
 const statusEl = document.getElementById('status');
@@ -13,7 +14,9 @@ const countAthletes = document.getElementById('count-athletes');
 const tbodySegments = document.getElementById('tbody-segments');
 const countSegments = document.getElementById('count-segments');
 
-// ── ONLINE STATUS ─────────────────────────────
+// ── STATUT RÉSEAU ─────────────────────────────
+
+// Vérifie la connectivité réelle en tentant un fetch sur Google
 async function checkRealConnectivity() {
     try {
         const controller = new AbortController();
@@ -28,6 +31,7 @@ async function checkRealConnectivity() {
     }
 }
 
+// Met à jour l'indicateur en ligne/hors ligne et désactive le bouton sync si hors ligne
 async function updateOnlineStatus() {
     const isOnline = await checkRealConnectivity();
     statusEl.textContent = isOnline ? '🟢 En ligne' : '🔴 Hors ligne';
@@ -35,10 +39,13 @@ async function updateOnlineStatus() {
     btnSync.disabled = !isOnline;
 }
 
+// Vérifie le statut toutes les 10 secondes
 setInterval(updateOnlineStatus, 10000);
 updateOnlineStatus();
 
-// ── RENDER RESULTS (colonnes dynamiques) ──────
+// ── RENDU DES TABLEAUX ────────────────────────
+
+// Génère le tableau des résultats avec des colonnes dynamiques (sans synced_at)
 function renderResults(rows) {
     countResults.textContent = `${rows.length} résultats`;
 
@@ -48,13 +55,14 @@ function renderResults(rows) {
         return;
     }
 
-    // Génère les titres de colonnes automatiquement (sans synced_at)
     const cols = Object.keys(rows[0]).filter(c => c !== 'synced_at');
     theadResults.innerHTML = '<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>';
     tbodyResults.innerHTML = rows.map(r =>
         '<tr>' + cols.map(c => `<td>${r[c] ?? '—'}</td>`).join('') + '</tr>'
     ).join('');
 }
+
+// Génère le tableau des athlètes (tokens tronqués, date d'expiration formatée)
 function renderAthletes(rows) {
     countAthletes.textContent = `${rows.length} athlètes`;
     tbodyAthletes.innerHTML = rows.length === 0
@@ -70,6 +78,7 @@ function renderAthletes(rows) {
             </tr>`).join('');
 }
 
+// Génère le tableau des segments avec toutes leurs colonnes géographiques
 function renderSegments(rows) {
     countSegments.textContent = `${rows.length} segments`;
     tbodySegments.innerHTML = rows.length === 0
@@ -90,7 +99,9 @@ function renderSegments(rows) {
                 <td>${s.end_lng ?? '—'}</td>
             </tr>`).join('');
 }
-// ── LOADERS ───────────────────────────────────
+
+// ── CHARGEMENT ────────────────────────────────
+// Récupère les trois tables en parallèle et rafraîchit l'affichage
 async function loadAll() {
     const [results, athletes, segments] = await Promise.all([
         window.api.getResults(),
@@ -102,7 +113,8 @@ async function loadAll() {
     renderSegments(segments);
 }
 
-// ── SYNC manuelle ─────────────────────────────
+// ── SYNC MANUELLE ─────────────────────────────
+// Déclenche une synchro au clic et rafraîchit les tableaux si succès
 btnSync.addEventListener('click', async () => {
     btnSync.disabled = true;
     message.textContent = 'Synchronisation...';
@@ -124,7 +136,8 @@ btnSync.addEventListener('click', async () => {
     btnSync.disabled = false;
 });
 
-// ── SYNC auto au démarrage ────────────────────
+// ── SYNC AUTO AU DÉMARRAGE ────────────────────
+// Reçoit le résultat de la synchro lancée par main.js et met à jour l'affichage
 window.api.onAutoSync(async (result) => {
     if (result.success) {
         const c = result.counts;
@@ -137,7 +150,8 @@ window.api.onAutoSync(async (result) => {
     setTimeout(() => { message.textContent = ''; message.className = ''; }, 5000);
 });
 
-// ── TABS ──────────────────────────────────────
+// ── ONGLETS ───────────────────────────────────
+// Active l'onglet cliqué et masque les autres
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -148,6 +162,7 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 // ── EXPORT ────────────────────────────────────
+// Exporte les résultats en CSV et affiche le chemin du fichier créé
 document.getElementById('btn-export-csv').addEventListener('click', async () => {
     const result = await window.api.exportCsv();
     message.textContent = result.success ? `CSV exporté : ${result.filePath}` : `${result.error}`;
@@ -155,6 +170,7 @@ document.getElementById('btn-export-csv').addEventListener('click', async () => 
     setTimeout(() => { message.textContent = ''; message.className = ''; }, 4000);
 });
 
+// Exporte les résultats en JSON et affiche le chemin du fichier créé
 document.getElementById('btn-export-json').addEventListener('click', async () => {
     const result = await window.api.exportJson();
     message.textContent = result.success ? `JSON exporté : ${result.filePath}` : `${result.error}`;
@@ -162,11 +178,14 @@ document.getElementById('btn-export-json').addEventListener('click', async () =>
     setTimeout(() => { message.textContent = ''; message.className = ''; }, 4000);
 });
 
-// ── AUTO-SAUVEGARDE ───────────────────────────
+// ── SAUVEGARDE AUTOMATIQUE ────────────────────
+// Stocke l'intervalle, le chemin et le format choisis pour l'autosave
 let autosaveInterval = null;
 let autosavePath = null;
 let autosaveFormat = null;
 
+// Démarre l'autosave : choisit le fichier, lance une première sauvegarde immédiate
+// puis synchro + sauvegarde à chaque intervalle avec un compte à rebours affiché
 document.getElementById('btn-start-autosave').addEventListener('click', async () => {
 
     const format = document.getElementById('autosave-format').value;
@@ -203,11 +222,12 @@ document.getElementById('btn-start-autosave').addEventListener('click', async ()
         if (!res.success) {
             document.getElementById('autosave-status').textContent = `Échec`;
         }
-        // reset du compteur après chaque sauvegarde
+        // Reset du compteur après chaque sauvegarde
         remaining = freqMs / 1000;
     }, freqMs);
 });
 
+// Arrête les deux intervalles et réinitialise les boutons
 document.getElementById('btn-stop-autosave').addEventListener('click', () => {
     clearInterval(autosaveInterval);
     clearInterval(countdownInterval);
@@ -220,6 +240,9 @@ document.getElementById('btn-stop-autosave').addEventListener('click', () => {
     document.getElementById('autosave-status').textContent = 'Sauvegarde automatique arrêtée';
 });
 
+// ── SUPPRESSION ───────────────────────────────
+
+// Efface toutes les tables après confirmation et rafraîchit l'affichage
 document.getElementById('btn-clear-all').addEventListener('click', async () => {
     if (!confirm('Effacer toutes les données ? Cette action est irréversible.')) return;
     const res = await window.api.clearAll();
@@ -229,6 +252,7 @@ document.getElementById('btn-clear-all').addEventListener('click', async () => {
     setTimeout(() => { message.textContent = ''; message.className = ''; }, 4000);
 });
 
+// Efface la table sélectionnée après confirmation et rafraîchit l'affichage
 document.getElementById('btn-clear-table').addEventListener('click', async () => {
     const table = document.getElementById('select-clear-table').value;
     if (!table) { message.textContent = 'Sélectionne une table.'; message.className = 'error'; return; }
@@ -240,8 +264,6 @@ document.getElementById('btn-clear-table').addEventListener('click', async () =>
     setTimeout(() => { message.textContent = ''; message.className = ''; }, 4000);
 });
 
-
 // ── INIT ──────────────────────────────────────
+// Charge toutes les données au démarrage de la page
 loadAll();
-
-

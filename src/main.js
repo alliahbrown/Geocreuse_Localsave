@@ -1,24 +1,21 @@
 const { app } = require('electron');
 const path = require('path');
 
-// EN PREMIER — avant tout autre require
 if (app.isPackaged) {
     require('dotenv').config({ path: path.join(process.resourcesPath, '.env') });
 } else {
     require('dotenv').config();
 }
 
-console.log('API_SECRET_KEY chargée :', process.env.API_SECRET_KEY ? 'OUI' : 'NON/undefined');
-
-// APRÈS seulement
 const { BrowserWindow, ipcMain, dialog } = require('electron');
 const fs = require('fs');
 const db = require('./db');
 const sync = require('./sync');
 
-// ... reste inchangé
 let mainWindow;
 
+// ── FENÊTRE PRINCIPALE ────────────────────────────────────────────
+// Crée la fenêtre Electron avec le preload et charge la page HTML
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1200,
@@ -32,6 +29,8 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, 'index.html'));
 }
 
+// ── DÉMARRAGE ─────────────────────────────────────────────────────
+// Initialise la DB, ouvre la fenêtre, puis lance une synchro automatique au chargement
 app.whenReady().then(async () => {
     await db.init();
     createWindow();
@@ -39,7 +38,6 @@ app.whenReady().then(async () => {
     mainWindow.webContents.once('did-finish-load', async () => {
         try {
             const counts = await sync.pull();
-            console.log('counts retourné :', JSON.stringify(counts));
             mainWindow.webContents.send('auto-sync-done', { success: true, counts });
         } catch (e) {
             console.log('Sync échouée :', e.message, e.stack);
@@ -48,12 +46,14 @@ app.whenReady().then(async () => {
     });
 });
 
-// ── Handlers IPC ─────────────────────────────────────────────────
+// ── HANDLERS IPC ─────────────────────────────────────────────────
 
+// Lecture des données locales
 ipcMain.handle('get-results', async () => await db.getResults());
 ipcMain.handle('get-athletes', async () => await db.getAthletes());
 ipcMain.handle('get-segments-stages', async () => await db.getSegmentsStages());
 
+// Déclenche une synchro manuelle depuis le renderer
 ipcMain.handle('sync', async () => {
     try {
         const counts = await sync.pull();
@@ -63,7 +63,9 @@ ipcMain.handle('sync', async () => {
     }
 });
 
-// Export CSV
+// ── EXPORT ────────────────────────────────────────────────────────
+
+// Exporte les résultats dans un fichier CSV choisi par l'utilisateur
 ipcMain.handle('export-csv', async () => {
     const rows = await db.getResults();
 
@@ -87,7 +89,8 @@ ipcMain.handle('export-csv', async () => {
     fs.writeFileSync(filePath, content);
     return { success: true, filePath };
 });
-// Export JSON
+
+// Exporte les résultats dans un fichier JSON choisi par l'utilisateur
 ipcMain.handle('export-json', async () => {
     const rows = db.getResults();
     if (rows.length === 0) return { success: false, error: 'Aucune donnée à exporter' };
@@ -103,7 +106,9 @@ ipcMain.handle('export-json', async () => {
     return { success: true, filePath };
 });
 
-// Auto-save
+// ── SAUVEGARDE AUTOMATIQUE ────────────────────────────────────────
+
+// Ouvre une boîte de dialogue pour choisir le fichier cible de l'autosave
 ipcMain.handle('autosave-pick-and-start', async (_, { format }) => {
     const ext = format === 'csv' ? 'csv' : 'json';
     const { filePath } = await dialog.showSaveDialog({
@@ -115,6 +120,7 @@ ipcMain.handle('autosave-pick-and-start', async (_, { format }) => {
     return { success: true, filePath };
 });
 
+// Écrit les données au format CSV ou JSON dans le fichier d'autosave
 ipcMain.handle('autosave-now', async (_, { filePath, format }) => {
     const rows = db.getResults();
     if (rows.length === 0) return { success: false, error: 'Aucune donnée' };
@@ -130,7 +136,9 @@ ipcMain.handle('autosave-now', async (_, { filePath, format }) => {
     return { success: true, filePath };
 });
 
+// ── SUPPRESSION ───────────────────────────────────────────────────
 
+// Vide une table spécifique
 ipcMain.handle('clear-table', async (_, table) => {
     try {
         db.clearTable(table);
@@ -140,6 +148,7 @@ ipcMain.handle('clear-table', async (_, table) => {
     }
 });
 
+// Vide toutes les tables d'un coup
 ipcMain.handle('clear-all', async () => {
     try {
         db.clearAll();

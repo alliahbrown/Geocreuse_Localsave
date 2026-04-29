@@ -9,6 +9,8 @@ build-linux:
     - tags
   before_script:
     - apt-get update && apt-get install -y libarchive-tools fakeroot rpm zip
+    - echo "API_SECRET_KEY=$API_SECRET_KEY" > .env
+    
   script:
     - npm ci
     - npm run dist -- --linux

@@ -2,90 +2,104 @@ const path = require('path');
 const fs = require('fs');
 const { app } = require('electron');
 const initSqlJs = require('sql.js');
+
+// Chemin vers la base de données SQLite sur le disque
 const DB_PATH = path.join(app.getPath('userData'), 'geocreuse.db');
 
-let db;
-let SQL;
+let db;  // Instance de la base de données
+let SQL; // Moteur SQLite
 
+// ── INITIALISATION ────────────────────────────────────────────────
+// Charge le moteur SQL, ouvre ou crée la DB, et crée les tables si besoin
 async function init() {
+    // Charge le fichier .wasm de sql.js selon l'environnement
     SQL = await initSqlJs({
         locateFile: file => {
             if (app.isPackaged) {
-                return path.join(process.resourcesPath, file);
+                return path.join(process.resourcesPath, file); // En production
             }
-            // En développement
-            return path.join(__dirname, '../node_modules/sql.js/dist', file);
+            return path.join(__dirname, '../node_modules/sql.js/dist', file); // En dev
         }
     });
 
     if (fs.existsSync(DB_PATH)) {
+        // Charge la DB existante depuis le disque
         const fileBuffer = fs.readFileSync(DB_PATH);
         db = new SQL.Database(fileBuffer);
 
-        // Vérifie que la structure est à jour
+        // Vérifie que la structure est à jour (colonne 'data' dans results)
+        // Si elle est obsolète, on repart d'une DB vierge
         try {
             db.run('SELECT data FROM results LIMIT 1');
         } catch (e) {
-            // Structure obsolète → recrée une DB propre
             console.log('DB obsolète, réinitialisation...');
             db.close();
             fs.unlinkSync(DB_PATH);
             db = new SQL.Database();
         }
     } else {
+        // Première utilisation : crée une DB vide
         db = new SQL.Database();
     }
 
-    // Ajout des nouvelles tables 
-    db.run(`
-    CREATE TABLE IF NOT EXISTS access_token (
-athlete_id INTEGER PRIMARY KEY,
-  athlete_access_token varchar(255) DEFAULT NULL,
-  athlete_refresh_token varchar(255) DEFAULT NULL,
-  athlete_token_expires_at int(11) DEFAULT NULL,
-  firstname varchar(255) DEFAULT NULL,
-  lastname varchar(255) DEFAULT NULL,
-      synced_at   TEXT DEFAULT (datetime('now'))
-    );
-  `);
-    db.run(`
-    CREATE TABLE IF NOT EXISTS segments_stages (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      etape       INTEGER,
-      date_etape  TEXT,
-      segment     INTEGER,
-      id_segment  INTEGER,
-      nom         TEXT,
-      type        TEXT,
-      sous_type   TEXT,
-      categorie   INTEGER,
-      start_lat   REAL,
-      start_lng   REAL,
-      end_lat     REAL,
-      end_lng     REAL,
-      synced_at   TEXT DEFAULT (datetime('now'))
-    );
-`);
+    // Crée les tables si elles n'existent pas encore
 
+    // Tokens Strava et infos des athlètes
     db.run(`
-    CREATE TABLE IF NOT EXISTS results (
-      athlete_id  INTEGER PRIMARY KEY,
-      data        TEXT,
-      synced_at   TEXT DEFAULT (datetime('now'))
-    );
-  `);
+        CREATE TABLE IF NOT EXISTS access_token (
+            athlete_id               INTEGER PRIMARY KEY,
+            athlete_access_token     varchar(255) DEFAULT NULL,
+            athlete_refresh_token    varchar(255) DEFAULT NULL,
+            athlete_token_expires_at int(11)      DEFAULT NULL,
+            firstname                varchar(255) DEFAULT NULL,
+            lastname                 varchar(255) DEFAULT NULL,
+            synced_at                TEXT         DEFAULT (datetime('now'))
+        );
+    `);
+
+    // Segments et étapes de la course
+    db.run(`
+        CREATE TABLE IF NOT EXISTS segments_stages (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            etape      INTEGER,
+            date_etape TEXT,
+            segment    INTEGER,
+            id_segment INTEGER,
+            nom        TEXT,
+            type       TEXT,
+            sous_type  TEXT,
+            categorie  INTEGER,
+            start_lat  REAL,
+            start_lng  REAL,
+            end_lat    REAL,
+            end_lng    REAL,
+            synced_at  TEXT DEFAULT (datetime('now'))
+        );
+    `);
+
+    // Résultats des athlètes (stockés en JSON pour les colonnes dynamiques)
+    db.run(`
+        CREATE TABLE IF NOT EXISTS results (
+            athlete_id INTEGER PRIMARY KEY,
+            data       TEXT,
+            synced_at  TEXT DEFAULT (datetime('now'))
+        );
+    `);
 
     save();
     console.log('SQLite initialisé :', DB_PATH);
 }
 
-// Persiste la DB en mémoire vers le fichier disque
+// ── PERSISTANCE ───────────────────────────────────────────────────
+// Exporte la DB en mémoire vers le fichier disque
 function save() {
     const data = db.export();
     fs.writeFileSync(DB_PATH, Buffer.from(data));
 }
 
-// les athletes 
+// ── ATHLÈTES ──────────────────────────────────────────────────────
+
+// Retourne tous les athlètes triés par nom
 function getAthletes() {
     const stmt = db.prepare('SELECT * FROM access_token ORDER BY lastname ASC');
     const rows = [];
@@ -93,6 +107,8 @@ function getAthletes() {
     stmt.free();
     return rows;
 }
+
+// Insère ou met à jour un athlète (upsert)
 function upsertAthletes(rows) {
     for (const r of rows) {
         db.run(`
@@ -117,8 +133,9 @@ function upsertAthletes(rows) {
     save();
 }
 
-// les segments 
+// ── SEGMENTS ──────────────────────────────────────────────────────
 
+// Retourne tous les segments triés par étape puis numéro de segment
 function getSegmentsStages() {
     const stmt = db.prepare('SELECT * FROM segments_stages ORDER BY etape ASC, segment ASC');
     const rows = [];
@@ -127,6 +144,7 @@ function getSegmentsStages() {
     return rows;
 }
 
+// Remplace tous les segments (structure dynamique côté serveur)
 function upsertSegmentsStages(rows) {
     db.run('DELETE FROM segments_stages');
     for (const r of rows) {
@@ -152,8 +170,10 @@ function upsertSegmentsStages(rows) {
     }
     save();
 }
-// résultats colonnes dynamiques 
 
+// ── RÉSULTATS ─────────────────────────────────────────────────────
+
+// Retourne tous les résultats en déserialisant le JSON stocké dans 'data'
 function getResults() {
     const stmt = db.prepare('SELECT athlete_id, data FROM results');
     const rows = [];
@@ -165,28 +185,24 @@ function getResults() {
     return rows;
 }
 
+// Insère ou met à jour un résultat en sérialisant les colonnes dynamiques en JSON
 function upsertResults(rows) {
     for (const r of rows) {
         const { athlete_id, ...rest } = r;
         db.run(`
-      INSERT INTO results (athlete_id, data)
-      VALUES (:athlete_id, :data)
-      ON CONFLICT(athlete_id) DO UPDATE SET
-        data      = excluded.data,
-        synced_at = datetime('now')
-    `, { ':athlete_id': athlete_id, ':data': JSON.stringify(rest) });
+            INSERT INTO results (athlete_id, data)
+            VALUES (:athlete_id, :data)
+            ON CONFLICT(athlete_id) DO UPDATE SET
+                data      = excluded.data,
+                synced_at = datetime('now')
+        `, { ':athlete_id': athlete_id, ':data': JSON.stringify(rest) });
     }
     save();
 }
 
-module.exports = {
-    init, save,
-    getAthletes, upsertAthletes,
-    getSegmentsStages, upsertSegmentsStages,
-    getResults, upsertResults,
-};
+// ── SUPPRESSION ───────────────────────────────────────────────────
 
-
+// Vide une table spécifique (whitelist pour éviter les injections SQL)
 function clearTable(table) {
     const allowed = ['access_token', 'segments_stages', 'results'];
     if (!allowed.includes(table)) throw new Error(`Table inconnue : ${table}`);
@@ -194,6 +210,7 @@ function clearTable(table) {
     save();
 }
 
+// Vide toutes les tables d'un coup
 function clearAll() {
     db.run('DELETE FROM access_token');
     db.run('DELETE FROM segments_stages');
@@ -201,6 +218,7 @@ function clearAll() {
     save();
 }
 
+// ── EXPORTS ───────────────────────────────────────────────────────
 module.exports = {
     init, save,
     getAthletes, upsertAthletes,
