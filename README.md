@@ -50,20 +50,6 @@ ne pas pubkier git
 
 ---
 
-<!-- ## Problèmes fréquents
-
-**L'application ne se lance pas sur Linux**  
-Certaines distributions nécessitent FUSE. Installer avec :
-```bash
-sudo apt install libfuse2   # Ubuntu/Debian
-sudo dnf install fuse       # Fedora
-```
-
-**Windows bloque le lancement**  
-L'exécutable n'est pas signé. C'est normal pour une application interne. Voir la procédure ci-dessus (Informations complémentaires → Exécuter quand même).
-
---- -->
-
 ## Pour les dev
 ### Prérequis
 
