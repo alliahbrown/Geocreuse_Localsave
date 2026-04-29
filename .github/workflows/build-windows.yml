@@ -1,0 +1,36 @@
+name: Build Windows
+
+on:
+  push:
+    tags:
+      - 'v*'          # se déclenche sur tes tags de release, comme GitLab
+  workflow_dispatch:  # permet de lancer manuellement depuis l'interface GitHub
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create .env
+        run: echo "API_SECRET_KEY=${{ secrets.API_SECRET_KEY }}" > .env
+
+      - name: Build
+        run: npx electron-builder --win --publish never
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GeoCreuse-Windows
+          path: dist/*.exe
+          retention-days: 30
