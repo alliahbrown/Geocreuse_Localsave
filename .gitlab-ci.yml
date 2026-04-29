@@ -29,15 +29,13 @@ build-windows:
     - apt-get update && apt-get install -y zip
   script:
     - npm ci
-    - npm run dist -- --win
-    - exe=$(find dist -name "geocreuse-desktop*.exe" | grep -v elevate | head -1)
-    - "echo 'EXE trouvé : $exe'"
-    - zip -j dist/GeoCreuse_LocalSave_Windows.zip "$exe"
+    - npm run dist -- --win --dir
+    - zip -r dist/GeoCreuse_LocalSave_Windows.zip dist/win-unpacked/
   artifacts:
     paths:
       - dist/GeoCreuse_LocalSave_Windows.zip
     expire_in: never
-
+    
 release:
   stage: release
   image: registry.gitlab.com/gitlab-org/release-cli:latest
