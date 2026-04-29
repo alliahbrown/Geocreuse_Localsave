@@ -17,24 +17,6 @@ build-linux:
   artifacts:
     paths:
       - dist/GeoCreuse_LocalSave_Linux.zip
-    expire_in: 1 hour
-
-build-windows:
-  stage: build
-  image: electronuserland/builder:wine
-  only:
-    - tags
-    - main
-  before_script:
-    - apt-get update && apt-get install -y zip
-  script:
-    - npm ci
-    - npm run dist -- --win --dir
-    - file dist/win-unpacked/geocreuse-desktop.exe
-    - ls -lah dist/win-unpacked/
-  artifacts:
-    paths:
-      - dist/GeoCreuse_LocalSave_Windows.zip
     expire_in: never
 
 release:
