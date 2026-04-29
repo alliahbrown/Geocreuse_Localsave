@@ -32,7 +32,7 @@ build-windows:
     - npm ci
     - npm run dist -- --win
     - exe=$(find dist -name "geocreuse-desktop*.exe" | grep -v elevate | head -1)
-    - echo "EXE trouvé : $exe"   # pour vérifier dans les logs
+    - "echo 'EXE trouvé : $exe'"
     - zip -j dist/GeoCreuse_LocalSave_Windows.zip "$exe"
   artifacts:
     paths:
