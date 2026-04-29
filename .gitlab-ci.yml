@@ -41,9 +41,10 @@ release:
 mirror-to-github:
   stage: release
   script:
-    - git remote add github https://alliahbrown:$TOKEN@github.com/alliahbrown/Geocreuse_Localsave.git
-    - git push github HEAD:main --force
-    - git push github --tags
+      - echo "Token = ${TOKEN:0:4}"
+      - git remote add github https://alliahbrown:$TOKEN@github.com/alliahbrown/Geocreuse_Localsave.git
+      - git push github HEAD:main --force
+      - git push github --tags
   only:
     - main
     - tags
