@@ -61,7 +61,7 @@ release:
           link_type: package
 
 mirror-to-github:
-  stage: deploy
+  stage: release
   script:
     - git remote add github https://alliahbrown:$TOKEN@github.com/alliahbrown/Geocreuse_Localsave.git
     - git push github HEAD:main --force
