@@ -1,18 +1,22 @@
-require('dotenv').config();
-console.log('API_SECRET_KEY chargée :', process.env.API_SECRET_KEY ? 'OUI' : 'NON/undefined');
-
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
-const fs = require('fs');
+const { app } = require('electron');
 const path = require('path');
-const db = require('./db');
-const sync = require('./sync');
 
+// EN PREMIER — avant tout autre require
 if (app.isPackaged) {
     require('dotenv').config({ path: path.join(process.resourcesPath, '.env') });
 } else {
-    require('dotenv').config({ path: path.join(__dirname, '../.env') });
+    require('dotenv').config();
 }
 
+console.log('API_SECRET_KEY chargée :', process.env.API_SECRET_KEY ? 'OUI' : 'NON/undefined');
+
+// APRÈS seulement
+const { BrowserWindow, ipcMain, dialog } = require('electron');
+const fs = require('fs');
+const db = require('./db');
+const sync = require('./sync');
+
+// ... reste inchangé
 let mainWindow;
 
 function createWindow() {

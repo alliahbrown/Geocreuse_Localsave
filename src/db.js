@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const { app } = require('electron');
+const initSqlJs = require('sql.js'); // ← déplacer ici
 
 const DB_PATH = path.join(app.getPath('userData'), 'geocreuse.db');
 
@@ -8,16 +9,16 @@ let db;
 let SQL;
 
 async function init() {
-
     SQL = await initSqlJs({
         locateFile: file => {
             if (app.isPackaged) {
                 return path.join(process.resourcesPath, file);
             }
+            // En développement
             return path.join(__dirname, '../node_modules/sql.js/dist', file);
         }
     });
-    // Charge la DB existante ou en crée une nouvelle
+
     if (fs.existsSync(DB_PATH)) {
         const fileBuffer = fs.readFileSync(DB_PATH);
         db = new SQL.Database(fileBuffer);

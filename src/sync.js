@@ -11,7 +11,7 @@ function getApiKey() {
 
 async function fetchJson(path) {
     const res = await fetch(`${API_URL}${path}`, {
-        headers: { 'x-api-key': getApiKey() }  // ← ici
+        headers: { 'x-api-key': getApiKey() }
     });
     if (!res.ok) throw new Error(`Erreur API ${path} : ${res.status}`);
     return res.json();
