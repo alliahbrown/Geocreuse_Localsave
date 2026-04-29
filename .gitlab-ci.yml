@@ -30,12 +30,13 @@ build-windows:
   script:
     - npm ci
     - npm run dist -- --win --dir
-    - zip -r dist/GeoCreuse_LocalSave_Windows.zip dist/win-unpacked/
+    - file dist/win-unpacked/geocreuse-desktop.exe
+    - ls -lah dist/win-unpacked/
   artifacts:
     paths:
       - dist/GeoCreuse_LocalSave_Windows.zip
     expire_in: never
-    
+
 release:
   stage: release
   image: registry.gitlab.com/gitlab-org/release-cli:latest
