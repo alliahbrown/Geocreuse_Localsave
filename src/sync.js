@@ -32,18 +32,24 @@ function isOnline() {
 
 async function pull() {
     if (!isOnline()) throw new Error('Hors ligne');
+    try {
+        const [athletes, segments, results] = await Promise.all([
+            fetchJson('/athletes'),
+            fetchJson('/segments-stages'),
+            fetchJson('/results'),
+        ]);
 
-    const [athletes, segments, results] = await Promise.all([
-        fetchJson('/athletes'),
-        fetchJson('/segments-stages'),
-        fetchJson('/results'),
-    ]);
-    db.upsertAthletes(athletes);
-    db.upsertSegmentsStages(segments);
-    db.upsertResults(results);
+        console.log('Premier athlete reçu :', JSON.stringify(athletes[0]));
+        console.log('Clés athlete :', Object.keys(athletes[0]));
+        db.upsertAthletes(athletes);
 
-    console.log(`Sync : ${athletes.length} athlètes, ${segments.length} segments, ${results.length} résultats`);
-    return { athletes: athletes.length, segments: segments.length, results: results.length };
+        db.upsertSegmentsStages(segments);
+        db.upsertResults(results);
+        return { athletes: athletes.length, segments: segments.length, results: results.length };
+    } catch (e) {
+        console.error('Erreur pull :', e);
+        throw e;
+    }
 }
 
 module.exports = { pull, isOnline };

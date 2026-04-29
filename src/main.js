@@ -42,7 +42,7 @@ app.whenReady().then(async () => {
             console.log('counts retourné :', JSON.stringify(counts));
             mainWindow.webContents.send('auto-sync-done', { success: true, counts });
         } catch (e) {
-            console.log('Sync échouée :', e.message);
+            console.log('Sync échouée :', e.message, e.stack);
             mainWindow.webContents.send('auto-sync-done', { success: false, error: e.message });
         }
     });

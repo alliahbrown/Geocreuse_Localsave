@@ -1,8 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const { app } = require('electron');
-const initSqlJs = require('sql.js'); // ← déplacer ici
-
+const initSqlJs = require('sql.js');
 const DB_PATH = path.join(app.getPath('userData'), 'geocreuse.db');
 
 let db;
@@ -22,35 +21,51 @@ async function init() {
     if (fs.existsSync(DB_PATH)) {
         const fileBuffer = fs.readFileSync(DB_PATH);
         db = new SQL.Database(fileBuffer);
+
+        // Vérifie que la structure est à jour
+        try {
+            db.run('SELECT data FROM results LIMIT 1');
+        } catch (e) {
+            // Structure obsolète → recrée une DB propre
+            console.log('DB obsolète, réinitialisation...');
+            db.close();
+            fs.unlinkSync(DB_PATH);
+            db = new SQL.Database();
+        }
     } else {
         db = new SQL.Database();
     }
 
     // Ajout des nouvelles tables 
     db.run(`
-    CREATE TABLE IF NOT EXISTS athletes (
-      athlete_id  INTEGER PRIMARY KEY,
-      firstname   TEXT,
-      lastname    TEXT,
+    CREATE TABLE IF NOT EXISTS access_token (
+athlete_id INTEGER PRIMARY KEY,
+  athlete_access_token varchar(255) DEFAULT NULL,
+  athlete_refresh_token varchar(255) DEFAULT NULL,
+  athlete_token_expires_at int(11) DEFAULT NULL,
+  firstname varchar(255) DEFAULT NULL,
+  lastname varchar(255) DEFAULT NULL,
       synced_at   TEXT DEFAULT (datetime('now'))
     );
   `);
-
     db.run(`
     CREATE TABLE IF NOT EXISTS segments_stages (
       id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      nom         TEXT,
       etape       INTEGER,
-      segment     INTEGER,
       date_etape  TEXT,
+      segment     INTEGER,
       id_segment  INTEGER,
+      nom         TEXT,
+      type        TEXT,
+      sous_type   TEXT,
+      categorie   INTEGER,
       start_lat   REAL,
       start_lng   REAL,
       end_lat     REAL,
       end_lng     REAL,
       synced_at   TEXT DEFAULT (datetime('now'))
     );
-  `);
+`);
 
     db.run(`
     CREATE TABLE IF NOT EXISTS results (
@@ -71,27 +86,33 @@ function save() {
 }
 
 // les athletes 
-
 function getAthletes() {
-    console.log("test");
-    const stmt = db.prepare('SELECT * FROM athletes ORDER BY lastname ASC');
+    const stmt = db.prepare('SELECT * FROM access_token ORDER BY lastname ASC');
     const rows = [];
     while (stmt.step()) rows.push(stmt.getAsObject());
     stmt.free();
     return rows;
 }
-
 function upsertAthletes(rows) {
-
     for (const r of rows) {
         db.run(`
-      INSERT INTO athletes (athlete_id, firstname, lastname)
-      VALUES (:athlete_id, :firstname, :lastname)
-      ON CONFLICT(athlete_id) DO UPDATE SET
-        firstname = excluded.firstname,
-        lastname  = excluded.lastname,
-        synced_at = datetime('now')
-    `, { ':athlete_id': r.athlete_id, ':firstname': r.firstname, ':lastname': r.lastname });
+            INSERT INTO access_token (athlete_id, firstname, lastname, athlete_access_token, athlete_refresh_token, athlete_token_expires_at)
+            VALUES (:athlete_id, :firstname, :lastname, :access_token, :refresh_token, :expires_at)
+            ON CONFLICT(athlete_id) DO UPDATE SET
+                firstname                = excluded.firstname,
+                lastname                 = excluded.lastname,
+                athlete_access_token     = excluded.athlete_access_token,
+                athlete_refresh_token    = excluded.athlete_refresh_token,
+                athlete_token_expires_at = excluded.athlete_token_expires_at,
+                synced_at                = datetime('now')
+        `, {
+            ':athlete_id': r.athlete_id,
+            ':firstname': r.firstname,
+            ':lastname': r.lastname,
+            ':access_token': r.athlete_access_token,
+            ':refresh_token': r.athlete_refresh_token,
+            ':expires_at': r.athlete_token_expires_at,
+        });
     }
     save();
 }
@@ -107,20 +128,22 @@ function getSegmentsStages() {
 }
 
 function upsertSegmentsStages(rows) {
-
-    db.run('DELETE FROM segments_stages'); // on remplace tout (structure dynamique)
+    db.run('DELETE FROM segments_stages');
     for (const r of rows) {
         db.run(`
-      INSERT INTO segments_stages
-        (nom, etape, segment, date_etape, id_segment, start_lat, start_lng, end_lat, end_lng)
-      VALUES
-        (:nom, :etape, :segment, :date_etape, :id_segment, :start_lat, :start_lng, :end_lat, :end_lng)
-    `, {
-            ':nom': r.nom,
+            INSERT INTO segments_stages
+              (etape, date_etape, segment, id_segment, nom, type, sous_type, categorie, start_lat, start_lng, end_lat, end_lng)
+            VALUES
+              (:etape, :date_etape, :segment, :id_segment, :nom, :type, :sous_type, :categorie, :start_lat, :start_lng, :end_lat, :end_lng)
+        `, {
             ':etape': r.etape,
-            ':segment': r.segment,
             ':date_etape': r.date_etape,
+            ':segment': r.segment,
             ':id_segment': r.id_segment,
+            ':nom': r.nom,
+            ':type': r.type,
+            ':sous_type': r.sous_type,
+            ':categorie': r.categorie,
             ':start_lat': r.start_lat,
             ':start_lng': r.start_lng,
             ':end_lat': r.end_lat,
@@ -129,7 +152,6 @@ function upsertSegmentsStages(rows) {
     }
     save();
 }
-
 // résultats colonnes dynamiques 
 
 function getResults() {

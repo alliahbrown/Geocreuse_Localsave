@@ -55,35 +55,41 @@ function renderResults(rows) {
         '<tr>' + cols.map(c => `<td>${r[c] ?? '—'}</td>`).join('') + '</tr>'
     ).join('');
 }
-
-// ── RENDER ATHLETES ───────────────────────────
 function renderAthletes(rows) {
     countAthletes.textContent = `${rows.length} athlètes`;
     tbodyAthletes.innerHTML = rows.length === 0
-        ? '<tr><td colspan="3" style="color:var(--muted);padding:1rem">Aucune donnée</td></tr>'
+        ? '<tr><td colspan="6" style="color:var(--muted);padding:1rem">Aucune donnée</td></tr>'
         : rows.map(a => `
             <tr>
                 <td>${a.athlete_id ?? '—'}</td>
                 <td>${a.firstname ?? '—'}</td>
                 <td>${a.lastname ?? '—'}</td>
+                <td style="font-size:0.75rem;max-width:150px;overflow:hidden;text-overflow:ellipsis">${a.athlete_access_token ?? '—'}</td>
+                <td style="font-size:0.75rem;max-width:150px;overflow:hidden;text-overflow:ellipsis">${a.athlete_refresh_token ?? '—'}</td>
+                <td>${a.athlete_token_expires_at ? new Date(a.athlete_token_expires_at * 1000).toLocaleString('fr-FR') : '—'}</td>
             </tr>`).join('');
 }
 
-// ── RENDER SEGMENTS ───────────────────────────
 function renderSegments(rows) {
     countSegments.textContent = `${rows.length} segments`;
     tbodySegments.innerHTML = rows.length === 0
-        ? '<tr><td colspan="5" style="color:var(--muted);padding:1rem">Aucune donnée</td></tr>'
+        ? '<tr><td colspan="12" style="color:var(--muted);padding:1rem">Aucune donnée</td></tr>'
         : rows.map(s => `
             <tr>
-                <td>${s.nom ?? '—'}</td>
                 <td>${s.etape ?? '—'}</td>
-                <td>${s.segment ?? '—'}</td>
                 <td>${s.date_etape ?? '—'}</td>
+                <td>${s.segment ?? '—'}</td>
                 <td>${s.id_segment ?? '—'}</td>
+                <td>${s.nom ?? '—'}</td>
+                <td>${s.type ?? '—'}</td>
+                <td>${s.sous_type ?? '—'}</td>
+                <td>${s.categorie ?? '—'}</td>
+                <td>${s.start_lat ?? '—'}</td>
+                <td>${s.start_lng ?? '—'}</td>
+                <td>${s.end_lat ?? '—'}</td>
+                <td>${s.end_lng ?? '—'}</td>
             </tr>`).join('');
 }
-
 // ── LOADERS ───────────────────────────────────
 async function loadAll() {
     const [results, athletes, segments] = await Promise.all([
