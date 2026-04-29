@@ -375,7 +375,7 @@
 
     <div class="toolbar">
         <button class="primary" id="btn-sync">Synchroniser</button>
-        <div class="toolbar-divider"></div>
+
         <button id="btn-export-csv">Export CSV</button>
         <button id="btn-export-json">Export JSON</button>
         <div class="toolbar-divider"></div>
@@ -393,6 +393,8 @@
         <button id="btn-start-autosave">Auto-sauvegarde</button>
         <button id="btn-stop-autosave" disabled>Arrêter</button>
         <span id="autosave-status"></span>
+
+
     </div>
 
     <div id="message"></div>
@@ -472,7 +474,17 @@
         </div>
     </div>
 
-    <div class="footer-note">Grand Tour de Creuse · Mai 2026</div>
+    <div class="footer-note" style="display:flex; align-items:center; justify-content:center; gap:1rem;">
+        <button id="btn-clear-all" style="color:#b43c28;border-color:#e0a090">Tout effacer</button>
+        <select id="select-clear-table" title="Table">
+            <option value="">— Table —</option>
+            <option value="results">Résultats</option>
+            <option value="access_token">Athlètes</option>
+            <option value="segments_stages">Segments</option>
+        </select>
+        <button id="btn-clear-table" style="color:#b43c28;border-color:#e0a090">Effacer la table</button>
+        <span>Grand Tour de Creuse · Mai 2026</span>
+    </div>
     <script src="renderer.js"></script>
 </body>
 

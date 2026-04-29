@@ -129,3 +129,22 @@ ipcMain.handle('autosave-now', async (_, { filePath, format }) => {
     }
     return { success: true, filePath };
 });
+
+
+ipcMain.handle('clear-table', async (_, table) => {
+    try {
+        db.clearTable(table);
+        return { success: true };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+});
+
+ipcMain.handle('clear-all', async () => {
+    try {
+        db.clearAll();
+        return { success: true };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+});

@@ -185,3 +185,26 @@ module.exports = {
     getSegmentsStages, upsertSegmentsStages,
     getResults, upsertResults,
 };
+
+
+function clearTable(table) {
+    const allowed = ['access_token', 'segments_stages', 'results'];
+    if (!allowed.includes(table)) throw new Error(`Table inconnue : ${table}`);
+    db.run(`DELETE FROM ${table}`);
+    save();
+}
+
+function clearAll() {
+    db.run('DELETE FROM access_token');
+    db.run('DELETE FROM segments_stages');
+    db.run('DELETE FROM results');
+    save();
+}
+
+module.exports = {
+    init, save,
+    getAthletes, upsertAthletes,
+    getSegmentsStages, upsertSegmentsStages,
+    getResults, upsertResults,
+    clearTable, clearAll,
+};

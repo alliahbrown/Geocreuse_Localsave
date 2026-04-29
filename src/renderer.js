@@ -219,5 +219,29 @@ document.getElementById('btn-stop-autosave').addEventListener('click', () => {
     document.getElementById('btn-stop-autosave').disabled = true;
     document.getElementById('autosave-status').textContent = 'Sauvegarde automatique arrêtée';
 });
+
+document.getElementById('btn-clear-all').addEventListener('click', async () => {
+    if (!confirm('Effacer toutes les données ? Cette action est irréversible.')) return;
+    const res = await window.api.clearAll();
+    message.textContent = res.success ? 'Toutes les données effacées.' : res.error;
+    message.className = res.success ? 'success' : 'error';
+    if (res.success) await loadAll();
+    setTimeout(() => { message.textContent = ''; message.className = ''; }, 4000);
+});
+
+document.getElementById('btn-clear-table').addEventListener('click', async () => {
+    const table = document.getElementById('select-clear-table').value;
+    if (!table) { message.textContent = 'Sélectionne une table.'; message.className = 'error'; return; }
+    if (!confirm(`Effacer la table "${table}" ? Cette action est irréversible.`)) return;
+    const res = await window.api.clearTable(table);
+    message.textContent = res.success ? `Table "${table}" effacée.` : res.error;
+    message.className = res.success ? 'success' : 'error';
+    if (res.success) await loadAll();
+    setTimeout(() => { message.textContent = ''; message.className = ''; }, 4000);
+});
+
+
 // ── INIT ──────────────────────────────────────
 loadAll();
+
+

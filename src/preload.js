@@ -1,5 +1,4 @@
 const { contextBridge, ipcRenderer } = require('electron');
-
 contextBridge.exposeInMainWorld('api', {
     getResults: () => ipcRenderer.invoke('get-results'),
     getAthletes: () => ipcRenderer.invoke('get-athletes'),
@@ -10,4 +9,6 @@ contextBridge.exposeInMainWorld('api', {
     autosavePickAndStart: (opts) => ipcRenderer.invoke('autosave-pick-and-start', opts),
     autosaveNow: (opts) => ipcRenderer.invoke('autosave-now', opts),
     onAutoSync: (cb) => ipcRenderer.on('auto-sync-done', (_, data) => cb(data)),
+    clearTable: (table) => ipcRenderer.invoke('clear-table', table),
+    clearAll: () => ipcRenderer.invoke('clear-all'),
 });
