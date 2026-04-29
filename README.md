@@ -9,6 +9,8 @@ Disponible sur **Windows** et **Linux**, sans installation requise.
 
 Rendez-vous sur la page des releases du projet :
 
+parler de github
+
 **[Télécharger la dernière version](../../releases/latest)**
 
 | Système | Fichier à télécharger |
