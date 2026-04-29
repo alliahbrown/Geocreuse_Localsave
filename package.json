@@ -23,7 +23,7 @@
       "node_modules/sql.js/dist/*.wasm"
     ],
     "win": {
-      "target": "portable"
+      "target": "nsis"
     },
     "linux": {
       "target": "AppImage"
