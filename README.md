@@ -11,8 +11,8 @@ Rendez-vous sur la page des releases du projet :
 
 | Système | Fichier | Lien direct |
 |---|---|---|
-| Windows | `GeoCreuse_LocalSave_Windows.zip` | **[Télécharger](https://gitlab.com/leptitbraquet/geocreuse_localsave/-/jobs/artifacts/v2.0.0/raw/dist/GeoCreuse_LocalSave_Linux.zip?job=build-linux)** |
-| Linux | `GeoCreuse_LocalSave_Linux.zip` | **[Télécharger](https://github.com/alliahbrown/Geocreuse_Localsave/actions/runs/25119050315/artifacts/6711554973)** |
+| Windows | `GeoCreuse_LocalSave_Windows.zip` | **[Télécharger](https://github.com/alliahbrown/Geocreuse_Localsave/actions/runs/25119050315/artifacts/6711554973)** |
+| Linux | `GeoCreuse_LocalSave_Linux.zip` | **[Télécharger](https://gitlab.com/leptitbraquet/geocreuse_localsave/-/jobs/artifacts/v2.0.0/raw/dist/GeoCreuse_LocalSave_Linux.zip?job=build-linux)** |
 
 ---
 
